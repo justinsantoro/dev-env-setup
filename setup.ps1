@@ -13,10 +13,11 @@ try {
     # install boxstarter
     Set-ExecutionPolicy Bypass -Scope Process -Force
 
-    If (!($ENV:BOXSTARTER_INSTALLED)) {
+    If (!($Env:BOXSTARTER_INSTALLED)) {
         [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
         Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://boxstarter.org/bootstrapper.ps1'))
         Get-Boxstarter -Force
+        setx.exe BOXSTARTER_INSTALLED=1
     }
     # setup boxstarter environ
     $here = C:\ProgramData\Boxstarter
@@ -38,10 +39,6 @@ try {
     Disable-UAC
     Disable-MicrosoftUpdate
 } catch {Write-Error $_; Exit}
-
-
-# begin devenv setup
-Set-Location $ENV:USERPROFILE
 
 # configure windows
 Disable-BingSearch
@@ -69,12 +66,13 @@ RefreshEnv
 Debian install --root
 if (!($?)) {write-error "debian install failed"; Exit}
 
-# move debian to desired data location
-# then upgrade and install libraries required for vscode server
 
-if ($wslDataDir.Length -gt 0) {
-    try {
-        new-Item -Path $wslDataDir -ItemType Directory -Force
+
+try {
+    if ($wslDataDir) {
+        # move debian data to desired data location
+        write-host "moving debian data dir to: $wslDataDir ..." -ForegroundColor Green
+        new-Item -Path $wslDataDir -ItemType Directory -Force | Out-Null
         wsl --export debian "./debian.tar"
         if (!($?)) {throw "error exporting debian"}
         wsl --unregister debian
@@ -82,68 +80,28 @@ if ($wslDataDir.Length -gt 0) {
         wsl --import debian $wslDataDir "./debian.tar"
         if (!($?)) {throw "error re-importing debian to new data location: $wslDataDir"}
         Remove-Item "./debian.tar" -Force
-		
-        #upgrade dist and install base programs
-		#install debian repository
-		write-host "installing packaged programs..."
-		debian run "apt update && apt-get -y dist-upgrade && apt -y install wget git gnupg2 rng-tools zsh taskwarrior timewarrior at"
-        if (!($?)) {throw "error installing packaged programs"}
-        
-        write-host "installing powershell repository..." -ForegroundColor Green
-		debian run "cd ~ && wget https://packages.microsoft.com/config/debian/10/packages-microsoft-prod.deb && sudo dpkg -i packages-microsoft-prod.deb"
-        if (!($?)) {throw "error installing powershell repo"}
-        debian run "apt update && apt -y install powershell"
-		if (!($?)) {throw "error installing pwsh"}
-		
-        #install gopass
-		write-host "installing gopass..." -ForegroundColor Green
-		debian run "cd ~ && wget https://github.com/gopasspw/gopass/releases/download/v1.13.0/gopass_1.13.0_linux_amd64.deb && sudo dpkg -i gopass_1.13.0_linux_amd64.deb"
-        if (!($?)) {throw "error installing gopass"}
-		
-        #install summon
-		write-Host "installing summon..." -ForegroundColor Green
-		debian run "cd ~ && wget https://raw.githubusercontent.com/cyberark/summon/main/install.sh -O installsummon.sh && bash installsummon.sh"
-        if (!($?)) {throw "error installing summon"}
-		
-        #install gopass summon provider
-		write-host "installing gopas summon provider..." -ForegroundColor Green
-		debian run "cd ~ && mkdir /usr/local/lib/summon && wget https://github.com/gopasspw/gopass-summon-provider/releases/download/v1.12.0/gopass-summon-provider-1.12.0-linux-amd64.tar.gz && tar -xf gopass-summon-provider-1.12.0-linux-amd64.tar.gz gopass-summon-provider --directory /usr/local/lib/summon"
-        if (!($?)) {throw "error installing gopass summon provider"}
-		
-        #add users
-		write-host "creating user..." -ForegroundColor Green
-		debian run "useradd -m -p `$(openssl passwd -1 $WslPassword) -s /bin/zsh -G sudo $wslUser"
-        if (!($?)) {throw "error adding user"}
-		
-        #install oh my zsh
-		write-host "installing oh my zsh..." -ForegroundColor Green
-        debian run "cd ~ && wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O installomz.sh && ZSH=/home/$wslUser/.oh-my-zsh sh installomz.sh --unattended --keep-zshrc"
-        if (!($?)) {throw "error installing oh my zsh"}
-		
-        write-host "installing powerlevel 10 zsh theme..." -ForegroundColor Green
-        #install powerlevel10 theme
-		debian run "git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /home/$wslUser/.oh-my-zsh/custom/themes/powerlevel10k"
-        if (!($?)) {throw "error installing powerlevel10"}
-
-        #download dotfiles
-		write-output "downloading dotfiles..."
-        $askpass = ""
-        if ($githubPass) {
-            debian run "echo -e '#!/bin/sh\nexec echo `"${githubPass}`"' >> ~/gitpass.sh && chmod +x ~/gitpass.sh"
-            $askpass = "GIT_ASKPASS=/root/gitpass.sh "
-        }
-		debian run "${askpass}bash -c 'cd /home/$wslUser && git init && git remote add origin $dotfilesRepo && git fetch && git reset --hard origin/main && git checkout main'"
-        if (!($?)) {throw "error cloning dotfiles"}
-		
-        debian config --default-user $wslUser
-		if (!($?)) {throw "error setting default user for debian"}
-
-		#add startup script to map wsl network drive
-		Write-Output "net use W: \\wsl$" | Out-File -FilePath "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\mapwsl.bat"
-    } catch {
-        Write-Host "error configuring wsl" -ForegroundColor Red
-        Write-Error $_
     }
+    
+    #run debian setup...
+    if (Test-Path "./debiansetup.sh") {
+        # copy file to debian
+        Write-Host "copying debian setup script to wsl..."
+        copy-item .\debiansetup.sh \\wsl$\debian\root\debiansetup.sh
+        debian run "/bin/bash /root/debiansetup.sh"
+    } else {
+        #download it from github
+        write-error "not implemented"
+    }
+    if (!($?)) {throw "error setting up debian"}
+    
+    debian config --default-user $ENV:WSL_USER
+    if (!($?)) {throw "error setting default user for debian"}
+
+    #add startup script to map wsl network drive
+    Write-Output "net use W: \\wsl$" | Out-File -FilePath "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\mapwsl.bat"
+} catch {
+    Write-Host "error configuring wsl" -ForegroundColor Red
+    Write-Error $_
 }
 
 # common dev tools
