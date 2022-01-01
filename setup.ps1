@@ -66,8 +66,6 @@ RefreshEnv
 Debian install --root
 if (!($?)) {write-error "debian install failed"; Exit}
 
-
-
 try {
     if ($wslDataDir) {
         # move debian data to desired data location
@@ -83,15 +81,14 @@ try {
     }
     
     #run debian setup...
-    if (Test-Path "./debiansetup.sh") {
-        # copy file to debian
-        Write-Host "copying debian setup script to wsl..."
-        copy-item .\debiansetup.sh \\wsl$\debian\root\debiansetup.sh
-        debian run "/bin/bash /root/debiansetup.sh"
-    } else {
-        #download it from github
-        write-error "not implemented"
-    }
+    if (!(Test-Path "./debiansetup.sh")) {
+        # download script from github
+        write-host "downloading debian setup script..." -ForegroundColor Green
+        Invoke-Webrequest -Uri https://raw.githubusercontent.com/justinsantoro/dev-env-setup/main/debiansetup.sh -OutFile debiansetup.sh -UseBasicParsing
+    } 
+    Write-Host "copying debian setup script to wsl..."
+    copy-item .\debiansetup.sh \\wsl$\debian\root\debiansetup.sh
+    debian run "/bin/bash /root/debiansetup.sh"
     if (!($?)) {throw "error setting up debian"}
     
     debian config --default-user $ENV:WSL_USER
