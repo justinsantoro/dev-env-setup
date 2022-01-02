@@ -1,6 +1,5 @@
 
 # WSL setup options
-# WSL setup options
 [CmdletBinding()]
 param (
     # desired wsl user name
@@ -42,32 +41,20 @@ try {
     # install boxstarter
     Set-ExecutionPolicy Bypass -Scope Process -Force
 
-    If (!($Env:BOXSTARTER_INSTALLED)) {
-        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-        Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://boxstarter.org/bootstrapper.ps1'))
-        Get-Boxstarter -Force
-        setx.exe BOXSTARTER_INSTALLED=1
-    }
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+    Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/justinsantoro/dev-env-setup/main/bootstrapper.ps1'))
+    If (!(Test-Admin)) {throw "must run as admin"}
+    Get-Boxstarter -Force
+    
     # setup boxstarter environ
-    $here = C:\ProgramData\Boxstarter
+    # Chocolated module is imported first via Get-Boxstarter
+    Resolve-Path C:\ProgramData\Boxstarter\Boxstarter.*\*.psd1 |
+        % { Import-Module $_.ProviderPath -DisableNameChecking }
 
-    # Import the Chocolatey module first so that $Boxstarter properties
-    # are initialized correctly and then import everything else.
-    Import-Module $here\Boxstarter.Chocolatey\Boxstarter.Chocolatey.psd1 -DisableNameChecking -ErrorAction SilentlyContinue
-    Resolve-Path $here\Boxstarter.*\*.psd1 |
-        % { Import-Module $_.ProviderPath -DisableNameChecking -ErrorAction SilentlyContinue }
-    Import-Module $here\Boxstarter.Common\Boxstarter.Common.psd1 -Function Test-Admin
-
-    # if(!(Test-Admin)) {
-    #     Write-BoxstarterMessage "Not running with administrative rights. Attempting to elevate..."
-    #     $command = "-ExecutionPolicy bypass -noexit -command &'$here\BoxstarterShell.ps1'"
-    #     Start-Process powershell -verb runas -argumentlist $command
-    #     Exit
-    # }
-
-    Disable-UAC
-    Disable-MicrosoftUpdate
 } catch {Write-Error $_; Exit}
+
+Disable-UAC
+Disable-MicrosoftUpdate
 
 # configure windows
 Disable-BingSearch
