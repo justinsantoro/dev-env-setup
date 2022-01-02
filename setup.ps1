@@ -139,17 +139,20 @@ choco install ublockorigin-chrome
 
 # office tools
 choco install -y clockify
-choco install -y office365business --forcex86 --params='/exclude:"Groove Lync Publisher" /eula:"TRUE"'
+choco install -y office365business --forcex86 --params="/exclude:Outlook PowerPoint Publisher OneNote Skype /eula:TRUE"
+# pin office to suppress upgrades via choco
+choco pin add -y -n office365business
 
 # get pdfxchange key file
 if ($pdfxKeyFile) {
     if (Test-Path $pdfxKeyFile) {
-        $pdfxKeyFile = " /KeyFile:$pdfKeyFile"
+        $pdfxKeyFile = " /KeyFile:'$pdfxKeyFile'"
     } else {
-        $pdfKeyFile = ""
+        $pdfxKeyFile = ""
     }
 }
-choco install -y pdfxchangeeditor --params='"/NoSetAsDefault /NoProgramsMenuShortcuts /NoUpdater /NoDesktopShortcuts${pdfxKeyFile}"'
+choco install -y pdfxchangeeditor --params="/NoSetAsDefault /NoUpdater /NoDesktopShortcuts${pdfxKeyFile}"
+#choco install -y pdfcreator --params="/Tasks=!winexplorer"
 
 # messaging
 choco install -y teams
