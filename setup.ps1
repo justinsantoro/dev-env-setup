@@ -132,6 +132,7 @@ choco install -y sql-server-management-studio
 choco install -y github-desktop
 choco install -y vscode-gitlens
 choco install -y pwsh
+choco install -y chocolateypowershell
 
 # browsers
 choco install chromium
