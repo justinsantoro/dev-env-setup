@@ -1,11 +1,40 @@
 
 # WSL setup options
+# WSL setup options
+[CmdletBinding()]
+param (
+    # desired wsl user name
+    [Parameter(Mandatory=$true)]
+    [string]
+    $wslUser,
+    # desired wsl user password
+    [Parameter(Mandatory=$true)]
+    [SecureString]
+    $wslPassword,
+    # optional desired location debian data directory
+    [Parameter(Mandatory=$true)]
+    [AllowEmptyString()]
+    [string]
+    $wslDataDir,
+    # remote dotfiles repo uri: must include username if password is required: https://justinsantoro@github.com/...
+    [Parameter(Mandatory=$true)]
+    [string]
+    $dotfilesRepo,
+    # optional password for cloning private dotfiles repo
+    [Parameter(Mandatory=$true)]
+    [SecureString]
+    $githubPassword,
+    # optional path to pdfxChange key file for automatic license activation
+    [Parameter(Mandatory=$true)]
+    [AllowEmptyString()]
+    [string]
+    $pdfxKeyFile
+)
 
-# $Env:WSL_PASSWORD                desired wsl user password
-# $Env:WSL_USER                    desired wsl user name
-# $Env:GITHUB_PASSWORD             optional password for cloning private dotfiles repo
-# $Env:DOTFILES_REPO               remote dotfiles repo url: must include username if password is required: https://justinsantoro@github.com/...
-$wslDataDir = $Env:WSL_DATA_DIR    # ooptional desired location of wsl data directory
+$Env:WSL_USER=$wslUser
+$Env:WSL_PASSWORD=([Net.NetworkCredential]::new('', $wslPassword).Password)
+$Env:GITHUB_PASSWORD=([Net.NetworkCredential]::new('', $githubPassword).Password)
+$Env:DOTFILES_REPO=$dotfilesRepo
 
 $pdfxKeyFile = $Env:PDFX_KEY_FILE  # location of pdfxchange key file
 
