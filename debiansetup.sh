@@ -60,5 +60,6 @@ git remote add origin $DOTFILES_REPO
 git fetch
 git reset --hard origin/main
 git checkout main
+rm -f /root/gitpass.sh
 
 echo "debian stetup done."
