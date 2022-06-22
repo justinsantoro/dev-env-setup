@@ -54,6 +54,8 @@ function run(){
 
     } catch {Write-Error $_; Exit}
 
+    # it restarted successfully, and autologged in but the script did not continue.
+    # maybe I need to run the following in the boxstarter shell.
     Invoke-BoxStarter {
         #load config
         $conf = cat C:\envsetup.json | convertFrom-json
@@ -90,13 +92,13 @@ function run(){
                 # move debian data to desired data location
                 write-host "moving debian data dir to: $conf.wslDataDir ..." -ForegroundColor Green
                 new-Item -Path $conf.wslDataDir -ItemType Directory -Force | Out-Null
-                wsl --export debian "./debian.tar"
+                wsl --export debian "C:/debian.tar"
                 if (!($?)) {throw "error exporting debian"}
                 wsl --unregister debian
                 if (!($?)) {throw "error unregistering debian"}
-                wsl --import debian $wslDataDir "./debian.tar"
+                wsl --import debian $conf.wslDataDir "C:/debian.tar"
                 if (!($?)) {throw "error re-importing debian to new data location: $wslDataDir"}
-                Remove-Item "./debian.tar" -Force
+                Remove-Item "C:/debian.tar" -Force
             }
             
             $Env:WSL_USER=$conf.wslUser
@@ -107,13 +109,13 @@ function run(){
             $Env:WSLENV = 'WSL_PASSWORD/u:WSL_USER/u:GITHUB_PASSWORD/u:DOTFILES_REPO/u' 
             
             #run debian setup...
-            if (!(Test-Path "./debiansetup.sh")) {
+            if (!(Test-Path "C:\debiansetup.sh")) {
                 # download script from github
                 write-host "downloading debian setup script..." -ForegroundColor Green
-                Invoke-Webrequest -Uri https://raw.githubusercontent.com/justinsantoro/dev-env-setup/main/debiansetup.sh -OutFile debiansetup.sh -UseBasicParsing
+                Invoke-Webrequest -Uri https://raw.githubusercontent.com/justinsantoro/dev-env-setup/main/debiansetup.sh -OutFile C:\debiansetup.sh -UseBasicParsing
             } 
             Write-Host "copying debian setup script to wsl..."
-            copy-item .\debiansetup.sh \\wsl$\debian\root\debiansetup.sh
+            copy-item C:\debiansetup.sh \\wsl$\debian\root\debiansetup.sh
             debian run "/bin/bash /root/debiansetup.sh"
             if (!($?)) {throw "error setting up debian"}
             
