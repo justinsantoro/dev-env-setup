@@ -8,7 +8,7 @@ function run(){
         $wslUser,
         # desired wsl user password
         [Parameter(Mandatory=$true)]
-        [SecureString]
+        [String]
         $wslPassword,
         # optional desired location debian data directory
         [Parameter(Mandatory=$true)]
@@ -21,7 +21,7 @@ function run(){
         $dotfilesRepo,
         # optional password for cloning private dotfiles repo
         [Parameter(Mandatory=$true)]
-        [SecureString]
+        [String]
         $githubPassword,
         # optional path to pdfxChange key file for automatic license activation
         [Parameter(Mandatory=$true)]
@@ -62,7 +62,7 @@ function run(){
         Disable-BingSearch
         Enable-RemoteDesktop
         Set-WindowsExplorerOptions -EnableShowHiddenFilesFoldersDrives -EnableShowFileExtensions -EnableShowFullPathInTitleBar -DisableOpenFileExplorerToQuickAccess -DisableShowRecentFilesInQuickAccess -DisableShowFrequentFoldersInQuickAccess -EnableExpandToOpenFolder
-        Set-BoxstarterTaskbarOptions -Size Small -MultiMonitorOn -Combine Full -MultiMonitorMode Open -DisableSearchBox
+        Set-BoxstarterTaskbarOptions -Size Small -MultiMonitorOn -Combine Full -MultiMonitorMode Open
         choco install -y Microsoft-Hyper-V-All --source="'windowsFeatures'"
 
         # Install the OpenSSH Client
@@ -257,5 +257,4 @@ function run(){
         #Restart-Computer
     } -RebootOK
 }
-$errorActionPreference=stop
 run
