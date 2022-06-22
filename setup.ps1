@@ -72,7 +72,10 @@ function run(){
 
         # Install wsl2
         choco install -y wsl2 --params "/Version:2 /Retry:true"
-        RefreshEnv
+        #wsl 2 install requires reboot
+        if (Test-PendingReboot) {
+            Invoke-Reboot
+        }
 
         # debian setup
         Invoke-WebRequest -Uri https://aka.ms/wsl-debian-gnulinux -OutFile ~/Debian.appx -UseBasicParsing
