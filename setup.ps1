@@ -1,4 +1,4 @@
-function() run {
+function run(){
     # WSL setup options
     [CmdletBinding()]
     param (
