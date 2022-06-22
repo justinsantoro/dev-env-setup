@@ -22,21 +22,21 @@ dpkg -i packages-microsoft-prod.deb
 echo "installing powershell..."
 apt update && apt -y install powershell
 
-echo "installing gopass..."
-wget https://github.com/gopasspw/gopass/releases/download/v1.13.0/gopass_1.13.0_linux_amd64.deb
-sudo dpkg -i gopass_1.13.0_linux_amd64.deb
+# echo "installing gopass..."
+# wget https://github.com/gopasspw/gopass/releases/download/v1.13.0/gopass_1.13.0_linux_amd64.deb
+# sudo dpkg -i gopass_1.13.0_linux_amd64.deb
 
-echo "installing summon..."
-wget https://raw.githubusercontent.com/cyberark/summon/main/install.sh -O installsummon.sh
-. ./installsummon.sh
+# echo "installing summon..."
+# wget https://raw.githubusercontent.com/cyberark/summon/main/install.sh -O installsummon.sh
+# . ./installsummon.sh
 
-echo "installing gopass summon provider..."
-mkdir summon
-mkdir /usr/local/lib/summon
-wget https://github.com/gopasspw/gopass-summon-provider/releases/download/v1.12.0/gopass-summon-provider-1.12.0-linux-amd64.tar.gz
-tar -xf ~/gopass-summon-provider-1.12.0-linux-amd64.tar.gz --directory summon
-mv summon/gopass-summon-provider /usr/local/lib/summon/gopass
-rm -r summon
+# echo "installing gopass summon provider..."
+# mkdir summon
+# mkdir /usr/local/lib/summon
+# wget https://github.com/gopasspw/gopass-summon-provider/releases/download/v1.12.0/gopass-summon-provider-1.12.0-linux-amd64.tar.gz
+# tar -xf ~/gopass-summon-provider-1.12.0-linux-amd64.tar.gz --directory summon
+# mv summon/gopass-summon-provider /usr/local/lib/summon/gopass
+# rm -r summon
 
 echo "adding user..."
 useradd -m -p $(openssl passwd -1 "$WSL_PASSWORD") -s /bin/zsh -G sudo $WSL_USER
